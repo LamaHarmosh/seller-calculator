@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Price Calculator</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f6f8; display: flex; justify-content: center; padding: 40px 16px; margin: 0; }
+    .card { background: #fff; padding: 28px; border-radius: 14px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); width: 100%; max-width: 420px; }
+    h2 { margin-top: 0; font-size: 1.35rem; color: #111827; }
+    .presets { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .presets button { flex: 1; padding: 8px 10px; border: 1px solid #d1d5db; background: #f9fafb; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .presets button:hover { background: #e5e7eb; }
+    label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 12px; }
+    input { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 6px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; }
+    .output { margin-top: 18px; padding: 16px; background: #eff6ff; border-radius: 10px; text-align: center; }
+    .price { font-size: 1.75rem; font-weight: 700; color: #1d4ed8; margin: 4px 0; }
+    .fee-note { font-size: 0.85rem; color: #4b5563; }
+    .compare { margin-top: 18px; border-top: 1px solid #e5e7eb; padding-top: 14px; }
+    .compare h3 { font-size: 0.95rem; margin: 0 0 10px; color: #111827; }
+    .compare-row { display: flex; justify-content: space-between; font-size: 0.88rem; padding: 6px 0; border-bottom: 1px dashed #e5e7eb; color: #374151; }
+    .cta-box { margin-top: 20px; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; text-align: center; }
+    .cta-box p { margin: 0 0 12px; font-size: 0.88rem; color: #166534; font-weight: 500; }
+    .cta-btn { display: inline-block; background: #16a34a; color: #fff; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
+    .cta-btn:hover { background: #15803d; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>What Should I Charge?</h2>
+
+    <div class="presets">
+      <button onclick="setPreset(5, 0)">Payhip (5%)</button>
+      <button onclick="setPreset(10, 0.50)">Gumroad (10% + $0.50)</button>
+      <button onclick="setPreset(2.9, 0.30)">Stripe (2.9% + $0.30)</button>
+    </div>
+
+    <label>Target Take-Home ($)
+      <input id="goal" type="number" value="50" min="0" oninput="calculate()">
+    </label>
+    <label>Platform Fee (%)
+      <input id="fee" type="number" value="5" min="0" step="0.1" oninput="calculate()">
+    </label>
+    <label>Fixed Fee Per Sale ($)
+      <input id="fixed" type="number" value="0" min="0" step="0.05" oninput="calculate()">
+    </label>
+
+    <div class="output">
+      <div class="fee-note">Recommended Price</div>
+      <div class="price" id="result">$52.63</div>
+      <div class="fee-note" id="feeBreakdown">Platform keeps $2.63</div>
+    </div>
+
+    <div class="compare">
+      <h3>Quick Platform Comparison</h3>
+      <div id="compareList"></div>
+    </div>
+
+    <div class="cta-box">
+      <p>Track monthly sales, fees, and taxes automatically with the Pro Seller Profit Sheet.</p>
+      <a class="cta-btn" href="https://payhip.com" target="https://payhip.com/b/lWqK7">Get the Pro Sheet ($9)</a>
+    </div>
+  </div>
+
+  <script>
+    const platforms = [
+      { name: "Payhip Free (5%)", rate: 0.05, fixed: 0 },
+      { name: "Stripe (2.9% + $0.30)", rate: 0.029, fixed: 0.30 },
+      { name: "Gumroad Direct (10% + $0.50)", rate: 0.10, fixed: 0.50 }
+    ];
+
+    function setPreset(percent, fixed) {
+      document.getElementById("fee").value = percent;
+      document.getElementById("fixed").value = fixed;
+      calculate();
+    }
+
+    function calculate() {
+      const goal = parseFloat(document.getElementById("goal").value) || 0;
+      const feeRate = (parseFloat(document.getElementById("fee").value) || 0) / 100;
+      const fixed = parseFloat(document.getElementById("fixed").value) || 0;
+
+      if (feeRate >= 1) {
+        document.getElementById("result").textContent = "Invalid fee";
+        document.getElementById("feeBreakdown").textContent = "Fee must be under 100%.";
+        return;
+      }
+
+      const chargePrice = (goal + fixed) / (1 - feeRate);
+      const totalFees = chargePrice - goal;
+
+      document.getElementById("result").textContent = "$" + chargePrice.toFixed(2);
+      document.getElementById("feeBreakdown").textContent = "Platform keeps $" + totalFees.toFixed(2);
+
+      const listHtml = platforms.map(p => {
+        const price = (goal + p.fixed) / (1 - p.rate);
+        return `<div class="compare-row"><span>${p.name}</span><strong>Charge $${price.toFixed(2)}</strong></div>`;
+      }).join("");
+      document.getElementById("compareList").innerHTML = listHtml;
+    }
+
+    calculate();
+  </script>
+</body>
+</html>
